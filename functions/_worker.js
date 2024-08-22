@@ -1,6 +1,7 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request))
-})
+export async function onRequest(context) {
+  const { request } = context;
+  return handleRequest(request);
+}
 function parseJwt(token) {
   const base64Url = token.split('.')[1]; // 获取载荷部分
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // 将 Base64Url 转为 Base64
