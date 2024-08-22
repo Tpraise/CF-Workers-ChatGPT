@@ -120,7 +120,7 @@ export async function onRequest(context) {
       const gpt35_limit = '-1';
       const gpt4_limit = '-1';
       const show_conversations = 'true';
-      const reset_limit = 'false';
+      const reset_limit = 'true';
 
       const url = 'https://chat.oaifree.com/token/register';
       const body = new URLSearchParams({
