@@ -118,7 +118,7 @@ export async function onRequest(context) {
       const expires_in = '0';
       const gpt35_limit = '-1';
       const gpt4_limit = '-1';
-      const show_conversations = 'false';
+      const show_conversations = (await env.oai_global_variables.get(unique_name)) ? 'true' : 'false';
       const reset_limit = 'false';
       // 更新KV变量，用户名对应的access_token
       formData.get('access_token') && env.oai_global_variables.put(unique_name, formData.get('access_token'));
