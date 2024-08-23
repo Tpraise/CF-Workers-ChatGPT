@@ -1,6 +1,67 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
+  function parseJwt(token) {
+    const base64Url = token.split('.')[1]; // 获取载荷部分
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // 将 Base64Url 转为 Base64
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+
+    return JSON.parse(jsonPayload); // 返回载荷解析后的 JSON 对象
+  }
+
+  async function getOAuthLink(shareToken, proxiedDomain) {
+    const url = `https://new.oaifree.com/api/auth/oauth_token`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Origin: `https://${proxiedDomain}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        share_token: shareToken,
+      }),
+    });
+    const data = await response.json();
+    return data.login_url;
+  }
+
+  function isTokenExpired(token) {
+    const payload = parseJwt(token);
+    const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间戳（秒）
+    return payload.exp < currentTime; // 检查 token 是否过期
+  }
+
+  function sitePasswordError() {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Incorrect</title>
+      </head>
+      <body>
+        <script>
+          alert("访问密码错误");
+          // 可以添加其他逻辑或重定向
+          window.history.back();
+        </script>
+      </body>
+      </html>
+    `;
+    return new Response(htmlContent, {
+      status: 401,
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
+
   async function handleRequest(request) {
     const requestURL = new URL(request.url);
     // ------------ 反代到 new.oaifree.com
@@ -198,67 +259,6 @@ export async function onRequest(context) {
         },
       });
     }
-  }
-
-  function parseJwt(token) {
-    const base64Url = token.split('.')[1]; // 获取载荷部分
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // 将 Base64Url 转为 Base64
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(function (c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        })
-        .join('')
-    );
-
-    return JSON.parse(jsonPayload); // 返回载荷解析后的 JSON 对象
-  }
-
-  async function getOAuthLink(shareToken, proxiedDomain) {
-    const url = `https://new.oaifree.com/api/auth/oauth_token`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Origin: `https://${proxiedDomain}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        share_token: shareToken,
-      }),
-    });
-    const data = await response.json();
-    return data.login_url;
-  }
-
-  function isTokenExpired(token) {
-    const payload = parseJwt(token);
-    const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间戳（秒）
-    return payload.exp < currentTime; // 检查 token 是否过期
-  }
-
-  function sitePasswordError() {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Incorrect</title>
-      </head>
-      <body>
-        <script>
-          alert("访问密码错误");
-          // 可以添加其他逻辑或重定向
-          window.history.back();
-        </script>
-      </body>
-      </html>
-    `;
-    return new Response(htmlContent, {
-      status: 401,
-      headers: { 'Content-Type': 'text/html' },
-    });
   }
 
   return handleRequest(request);
