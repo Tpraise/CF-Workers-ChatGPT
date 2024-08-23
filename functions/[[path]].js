@@ -9,7 +9,7 @@ export async function onRequest(context) {
       requestURL.host = 'new.oaifree.com';
       const response = fetch(new Request(requestURL, request));
       //去掉小锁
-      if (url.pathname === '/backend-api/conversations') {
+      if (path === '/backend-api/conversations') {
         const data = await response.json();
         data.items = data.items.filter(item => item.title !== "🔒");
         return new Response(JSON.stringify(data), {
