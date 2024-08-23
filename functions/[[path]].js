@@ -8,15 +8,15 @@ export async function onRequest(context) {
     if (path !== '/auth/login_auth0' && path !== '/auth/login') {
       requestURL.host = 'new.oaifree.com';
       const response = fetch(new Request(requestURL, request));
-      //去掉小锁
-      if (path === '/backend-api/conversations') {
-        const data = await response.json();
-        data.items = data.items.filter(item => item.title !== "🔒");
-        return new Response(JSON.stringify(data), {
-          status: response.status,
-          headers: response.headers
-        });
-      }
+      // //去掉小锁
+      // if (path === '/backend-api/conversations') {
+      //   const data = await response.json();
+      //   data.items = data.items.filter(item => item.title !== "🔒");
+      //   return new Response(JSON.stringify(data), {
+      //     status: response.status,
+      //     headers: response.headers
+      //   });
+      // }
       return response;
     }
 
