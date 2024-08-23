@@ -239,28 +239,23 @@ export async function onRequest(context) {
   }
 
   function sitePasswordError() {
-    // @ts-ignore
-    const SITE_PASSWORD = (await env.oai_global_variables.get('SITE_PASSWORD')) || '';
-    const site_password = formData.get('site_password') || '';
-    if (site_password !== SITE_PASSWORD) {
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Password Incorrect</title>
-        </head>
-        <body>
-          <script>
-            alert("访问密码错误");
-            // 可以添加其他逻辑或重定向
-            window.history.back();
-          </script>
-        </body>
-        </html>
-      `;
-    }
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Incorrect</title>
+      </head>
+      <body>
+        <script>
+          alert("访问密码错误");
+          // 可以添加其他逻辑或重定向
+          window.history.back();
+        </script>
+      </body>
+      </html>
+    `;
     return new Response(htmlContent, {
       status: 401,
       headers: { 'Content-Type': 'text/html' },
