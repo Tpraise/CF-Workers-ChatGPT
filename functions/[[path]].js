@@ -187,7 +187,7 @@ export async function onRequest(context) {
                       <input type="password" id="site_password" name="site_password" placeholder=" ">
                       <label for="site_password">本站密码</label>
                   </div>
-                  <div class="input-wrapper" id="access_token_wrapper">
+                  <div class="input-wrapper" id="access_token_wrapper" style="display: none;">
                       <input id="access_token" name="access_token" placeholder=" ">
                       <label for="access_token">accessToken（可选）</label>
                   </div>
