@@ -157,7 +157,6 @@ export async function onRequest(context) {
                   margin-top: 16px;
                   margin-bottom: 0;
                   font-size: 14px;
-                  width: 320px;
               }
               @media (max-width: 768px) {
                   body,
@@ -193,7 +192,7 @@ export async function onRequest(context) {
                       <label for="access_token">accessToken（可选）</label>
                   </div>
                   <button type="submit">继续</button>
-                  <p class="other-page">使用自己的 <a class="other-page-link" onclick="toggleAccessToken">accessToken</a></p>
+                  <p class="other-page">使用自己的 <a class="other-page-link" href="javascript:void(0);" onclick="toggleAccessToken()">accessToken</a></p>
               </form>
           </div>
           <script>
