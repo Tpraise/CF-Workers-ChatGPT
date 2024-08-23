@@ -49,82 +49,27 @@ export async function onRequest(context) {
     }
 
     // ------------ 进行拿share_token去登录
-    // @ts-ignore
-    const token = await env.oai_global_variables.get('at'); // 这里填入你的 JWT
-    if (token === '' || isTokenExpired(token)) {
-      // 如果 Token 过期，执行获取新 Token 的逻辑
-      const url = 'https://token.oaifree.com/api/auth/refresh';
-      // @ts-ignore
-      const refreshToken = await env.oai_global_variables.get('rt'); // 实际情况下你可能会从某处获取这个值
-
-      // 发送 POST 请求
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-        },
-        body: `refresh_token=${refreshToken}`,
-      });
-
-      // 检查响应状态
-      if (response.ok) {
-        const data = await response.json();
-        const token = data.access_token;
-
-        // @ts-ignore
-        await env.oai_global_variables.put('at', token);
-      } else {
-        return new Response('Error fetching access token', {
-          status: response.status,
-        });
-      }
-    }
-
-    // 如果 Token 未过期，继续执行原来的逻辑
     if (request.method === 'POST') {
       const formData = await request.formData();
 
       // @ts-ignore
-      const SITE_PASSWORD = (await env.oai_global_variables.get('SITE_PASSWORD')) || '';
-      const site_password = formData.get('site_password') || '';
-      if (site_password !== SITE_PASSWORD) {
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Password Incorrect</title>
-          </head>
-          <body>
-            <script>
-              alert("访问密码错误");
-              // 可以添加其他逻辑或重定向
-              window.history.back();
-            </script>
-          </body>
-          </html>
-        `;
-
-        return new Response(htmlContent, {
-          status: 401,
-          headers: { 'Content-Type': 'text/html' },
-        });
-      }
-
-      // @ts-ignore
       const unique_name = formData.get('unique_name');
+      const name_token = await env.oai_global_variables.get(unique_name);
       const site_limit = '';
       const expires_in = '0';
       const gpt35_limit = '-1';
       const gpt4_limit = '-1';
-      const show_conversations = (await env.oai_global_variables.get(unique_name)) ? 'true' : 'false';
+      const show_conversations = name_token ? 'true' : 'false';
       const reset_limit = 'false';
       // 更新KV变量，用户名对应的access_token
       formData.get('access_token') && env.oai_global_variables.put(unique_name, formData.get('access_token'));
-      // 没有获取到access_token，使用全局分享的access_token
-      const access_token = (await env.oai_global_variables.get(unique_name)) ?? (await env.oai_global_variables.get('at'));
-
+      // 没有获取到用户名的access_token，使用全局分享的access_token
+      const access_token = name_token ?? (await env.oai_global_variables.get('at'));
+      if(isTokenExpired(access_token)) {
+        return new Response('access_token已过期，请更新', {
+          status: 401,
+        });
+      }
       const url = 'https://chat.oaifree.com/token/register';
       const body = new URLSearchParams({
         unique_name,
@@ -257,10 +202,6 @@ export async function onRequest(context) {
                   <div class="input-wrapper">
                       <input type="text" id="unique_name" name="unique_name" placeholder=" " required value="">
                       <label for="unique_name">用户名</label>
-                  </div>
-                  <div class="input-wrapper">
-                      <input type="password" id="site_password" name="site_password" placeholder=" ">
-                      <label for="site_password">本站密码</label>
                   </div>
                   <div class="input-wrapper">
                       <input id="access_token" name="access_token" placeholder=" ">
