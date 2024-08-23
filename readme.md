@@ -13,7 +13,8 @@
 | 变量名 | 示例 | 备注 | 
 |--|--|--|
 | at | eyJhbGciOiJSUzI1NiIs... | 你的共享accessToken |
-| YOUR_DOMAIN | new.oaifree.com | 你的域名 |
+| YOUR_DOMAIN | new.oaifree.com | 你的反代域名 |
+| SITE_PASSWORD | 123456 | 你的站点密码 |
 
 ## 使用方法
 
@@ -21,6 +22,7 @@
 
 - **用户名**： 你独一无二的名字，用于会话隔离，可搭配accessToken使用。
 - **accessToken（可选）**：如果填写，将会在KV命名空间中添加或更新对应你用户名的accessToken，再次登陆时也无需再填写accessToken，只需在过期时重新更新一下accessToken。
+- **本站密码**：如果配置了SITE_PASSWORD则会显示该输入框，填写对应的站点密码方可登录。
 
 ## 写在最后
 - 本项目通过反代[new.oaifree.com](https://new.oaifree.com)实现
