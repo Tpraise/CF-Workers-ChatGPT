@@ -48,8 +48,9 @@ export async function onRequest(context) {
           status: 401,
         }); 
       }
+      console.log(isTokenExpired(access_token));
       // 如果表单填写access_token，更新该用户名的access_token
-      form_access_token && (await env.oai_global_variables.put(unique_name, form_access_token));
+      form_access_token && !isTokenExpired(form_access_token) && (await env.oai_global_variables.put(unique_name, form_access_token));
       const url = 'https://chat.oaifree.com/token/register';
       const body = new URLSearchParams({
         unique_name,
@@ -71,12 +72,16 @@ export async function onRequest(context) {
       });
 
       const respJson = await apiResponse.json();
-      const tokenKey = 'token_key' in respJson ? respJson.token_key : '未找到 Share_token';
+      if('token_key' in respJson) {
+        return new Response('access_token无效', {
+          status: 401,
+        });
+      }
 
       // @ts-ignore
       const YOUR_DOMAIN = (await env.oai_global_variables.get('YOUR_DOMAIN')) || requestURL.host;
-      console.log(tokenKey, getOAuthLink(tokenKey, YOUR_DOMAIN));
-      return Response.redirect(await getOAuthLink(tokenKey, YOUR_DOMAIN), 302);
+
+      return Response.redirect(await getOAuthLink(respJson.token_key, YOUR_DOMAIN), 302);
     } else {
       const SITE_PASSWORD = await env.oai_global_variables.get('SITE_PASSWORD');
       const formHtml = `
