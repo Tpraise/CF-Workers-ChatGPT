@@ -46,11 +46,8 @@ export async function onRequest(context) {
       if (isTokenExpired(access_token)) {
         return new Response('access_token已过期，请更新', {
           status: 401,
-        }); 
+        });
       }
-      console.log(isTokenExpired(access_token));
-      // 如果表单填写access_token，更新该用户名的access_token
-      form_access_token && !isTokenExpired(form_access_token) && (await env.oai_global_variables.put(unique_name, form_access_token));
       const url = 'https://chat.oaifree.com/token/register';
       const body = new URLSearchParams({
         unique_name,
@@ -72,11 +69,13 @@ export async function onRequest(context) {
       });
 
       const respJson = await apiResponse.json();
-      if('token_key' in respJson) {
+      if(!'token_key' in respJson) {
         return new Response('access_token无效', {
           status: 401,
         });
       }
+      // 如果表单填写access_token，更新该用户名的access_token
+      form_access_token && (await env.oai_global_variables.put(unique_name, form_access_token));
 
       // @ts-ignore
       const YOUR_DOMAIN = (await env.oai_global_variables.get('YOUR_DOMAIN')) || requestURL.host;
@@ -232,15 +231,12 @@ export async function onRequest(context) {
       return payload.exp < currentTime; // 检查 token 是否过期
     } catch (error) {
       console.error("Failed to parse token:", error.message);
-      return false; // 如果解析失败，返回 false
+      return true; // 如果解析失败，返回 true
     }
   }
 
   function parseJwt(token) {
     const base64Url = token?.split('.')[1]; // 获取载荷部分
-    if (!base64Url) {
-      throw new Error('Invalid token');
-    }
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // 将 Base64Url 转为 Base64
     const jsonPayload = decodeURIComponent(
       atob(base64)
