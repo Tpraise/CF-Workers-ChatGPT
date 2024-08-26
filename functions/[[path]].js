@@ -33,23 +33,23 @@ export async function onRequest(context) {
       // @ts-ignore
       const unique_name = formData.get('unique_name');
       const form_access_token = formData.get('access_token');
-      // 更新KV变量，用户名对应的access_token
-      form_access_token && isTokenExpired(form_access_token) && (await env.oai_global_variables.put(unique_name, form_access_token));
       const name_access_token = await env.oai_global_variables.get(unique_name);
-      // 没有获取到用户名的access_token，使用全局分享的access_token
-      const access_token = name_access_token ?? (await env.oai_global_variables.get('at'));
+      // access_token使用顺序：表单填写 -> KV变量 -> 共享
+      const access_token = form_access_token ?? ( name_access_token ?? await env.oai_global_variables.get('at'));
       const site_limit = '';
       const expires_in = '0';
       const gpt35_limit = '-1';
       const gpt4_limit = '-1';
       // 使用自己的access_token不开启会话隔离
-      const show_conversations = name_access_token ? 'true' : 'false';
+      const show_conversations = (form_access_token || name_access_token) ? 'true' : 'false';
       const reset_limit = 'false';
       if (isTokenExpired(access_token)) {
         return new Response('access_token已过期，请更新', {
           status: 401,
         }); 
       }
+      // 如果表单填写access_token，更新该用户名的access_token
+      form_access_token && (await env.oai_global_variables.put(unique_name, form_access_token));
       const url = 'https://chat.oaifree.com/token/register';
       const body = new URLSearchParams({
         unique_name,
