@@ -43,6 +43,7 @@ export async function onRequest(context) {
       // 使用自己的access_token不开启会话隔离
       const show_conversations = (form_access_token || name_access_token) ? 'true' : 'false';
       const reset_limit = 'false';
+      console.log(access_token);
       if (isTokenExpired(access_token)) {
         return new Response('access_token已过期，请更新', {
           status: 401,
