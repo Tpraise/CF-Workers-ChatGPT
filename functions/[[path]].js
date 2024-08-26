@@ -75,7 +75,7 @@ export async function onRequest(context) {
 
       // @ts-ignore
       const YOUR_DOMAIN = (await env.oai_global_variables.get('YOUR_DOMAIN')) || requestURL.host;
-
+      console.log(tokenKey, getOAuthLink(tokenKey, YOUR_DOMAIN));
       return Response.redirect(await getOAuthLink(tokenKey, YOUR_DOMAIN), 302);
     } else {
       const SITE_PASSWORD = await env.oai_global_variables.get('SITE_PASSWORD');
