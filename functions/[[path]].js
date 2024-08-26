@@ -32,21 +32,23 @@ export async function onRequest(context) {
       }
       // @ts-ignore
       const unique_name = formData.get('unique_name');
-      const name_token = await env.oai_global_variables.get(unique_name);
+      const form_access_token = formData.get('access_token');
+      // 更新KV变量，用户名对应的access_token
+      form_access_token && isTokenExpired(form_access_token) && (await env.oai_global_variables.put(unique_name, form_access_token));
+      const name_access_token = await env.oai_global_variables.get(unique_name);
+      // 没有获取到用户名的access_token，使用全局分享的access_token
+      const access_token = name_access_token ?? (await env.oai_global_variables.get('at'));
       const site_limit = '';
       const expires_in = '0';
       const gpt35_limit = '-1';
       const gpt4_limit = '-1';
-      const show_conversations = name_token ? 'true' : 'false';
+      // 使用自己的access_token不开启会话隔离
+      const show_conversations = name_access_token ? 'true' : 'false';
       const reset_limit = 'false';
-      // 更新KV变量，用户名对应的access_token
-      formData.get('access_token') && env.oai_global_variables.put(unique_name, formData.get('access_token'));
-      // 没有获取到用户名的access_token，使用全局分享的access_token
-      const access_token = name_token ?? (await env.oai_global_variables.get('at'));
       if (isTokenExpired(access_token)) {
         return new Response('access_token已过期，请更新', {
           status: 401,
-        });
+        }); 
       }
       const url = 'https://chat.oaifree.com/token/register';
       const body = new URLSearchParams({
@@ -250,9 +252,14 @@ export async function onRequest(context) {
   }
 
   function isTokenExpired(token) {
-    const payload = parseJwt(token);
-    const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间戳（秒）
-    return payload.exp < currentTime; // 检查 token 是否过期
+    try {
+      const payload = parseJwt(token);
+      const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间戳（秒）
+      return payload.exp < currentTime; // 检查 token 是否过期
+    } catch (error) {
+      console.error("Failed to parse token:", error);
+      return false; // 如果解析失败，返回 false
+    }
   }
 
   function sitePasswordError() {
