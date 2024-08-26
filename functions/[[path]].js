@@ -221,18 +221,21 @@ export async function onRequest(context) {
   }
 
   function parseJwt(token) {
-    const base64Url = token.split('.')[1]; // 获取载荷部分
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // 将 Base64Url 转为 Base64
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(function (c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        })
-        .join('')
-    );
-
-    return JSON.parse(jsonPayload); // 返回载荷解析后的 JSON 对象
+    try{
+      const base64Url = token.split('.')[1]; // 获取载荷部分
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // 将 Base64Url 转为 Base64
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join('')
+      );
+      return JSON.parse(jsonPayload); // 返回载荷解析后的 JSON 对象
+    } catch (error){
+      throw error;
+    }
   }
 
   async function getOAuthLink(shareToken, proxiedDomain) {
@@ -257,7 +260,7 @@ export async function onRequest(context) {
       const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间戳（秒）
       return payload.exp < currentTime; // 检查 token 是否过期
     } catch (error) {
-      console.error("Failed to parse token:", error);
+      console.error("Failed to parse token:", error.message);
       return false; // 如果解析失败，返回 false
     }
   }
